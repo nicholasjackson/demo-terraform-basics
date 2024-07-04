@@ -8,26 +8,18 @@ variable "region" {
   default = "europe-west1-b"
 }
 
-variable "machine_type" {
-  description = "The machine type to use for the VM"
+variable "machine" {
+  description = "The machine type and image to use for the VM"
   # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM
   default     = {
-    "gpu": "g2-standard-4" 
-    "cpu": "n1-standard-4"
+    "gpu": {"type": "g2-standard-4", "image": "deeplearning-platform-release/common-cu121-debian-11-py310"}
+    "cpu": {"type": "n1-standard-4", "image": "debian-11-bullseye-v20240611"}
   }
 }
 
 variable "gpu_enabled" {
   description = "Is the VM GPU enabled"
-  default = false
-}
-
-variable "image" {
-  description = "The image to use for the VM"
-
-  # Debian 11 with Nvidia CUDA 12.1
-  #default = "deeplearning-platform-release/common-cu121-debian-11-py310"
-  default = "debian-11-bullseye-v20240611"
+  default = true
 }
 
 variable "open_web_ui_user" {

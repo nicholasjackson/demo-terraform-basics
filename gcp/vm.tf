@@ -25,14 +25,14 @@ resource "google_compute_disk" "boot" {
   project = var.project
 
   # Debian 11 with Nvidia CUDA 12.1 and Python 3.10
-  image = var.image
+  image = var.gpu_enabled == true ? var.machine.gpu.image : var.machine.cpu.image
   size  = 200
 }
 
 # Create the VM instance
 resource "google_compute_instance" "ollama" {
   name         = "ollama"
-  machine_type = var.gpu_enabled == "true" ? var.machine_type["gpu"] : var.machine_type["cpu"]
+  machine_type = var.gpu_enabled == true ? var.machine.gpu.type : var.machine.cpu.type
   zone         = var.region
   project      = var.project
 
