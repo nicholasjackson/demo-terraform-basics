@@ -49,13 +49,23 @@ locals {
   image_details = var.gpu_enabled == true ? var.machine.gpu : var.machine.cpu
 }
 
-data "template_cloudinit_config" "config" {
+data "cloudinit_config" "config" {
   gzip          = true
   base64_encode = true
 
   part {
+    filename     = "init.sh"
+    content_type = "text/x-shellscript"
+
+    content = templatefile("./scripts/init.sh", { gpu_enabled = var.gpu_enabled, open_webui_password = random_password.password.result })
+  }
+
+  part {
     content_type = "text/cloud-config"
-    content      = templatefile("./scripts/init.yaml", {gpu_enabled=var.gpu_enabled, open_webui_password=random_password.password.result})
+    content = templatefile("./scripts/init.yaml", {
+      provisioner_ssh_key = tls_private_key.provisioner.public_key_openssh
+      ollama_ssh_key      = var.ssh_pub_key
+    })
   }
 }
 
@@ -87,7 +97,7 @@ resource "azurerm_virtual_machine" "ollama" {
     computer_name  = "ollama"
     admin_username = "ollama"
 
-    custom_data = data.template_cloudinit_config.config.rendered 
+    custom_data = data.cloudinit_config.config.rendered
   }
 
   os_profile_linux_config {
@@ -102,4 +112,18 @@ resource "azurerm_virtual_machine" "ollama" {
   tags = {
     firewall = "ssh"
   }
+}
+
+# Create a terracurl request to check if the web server is up and running
+# Wait a max of 20 minutes with a 10 second interval
+resource "terracurl_request" "ollama" {
+  depends_on = [ azurerm_virtual_machine.ollama ]
+  
+  name = "ollama"
+  url = "http://${azurerm_public_ip.ollama.ip_address}"
+  method = "GET"
+
+  response_codes = [200]
+  max_retry      = 120
+  retry_interval = 10
 }

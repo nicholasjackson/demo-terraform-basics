@@ -1,15 +1,14 @@
-package_update: false
-package_upgrade: false
-write_files:
-  - path: /run/scripts/init-script.sh
-    content: |
-      # Fail if one command fails
-      set -e
-      export DEBIAN_FRONTEND=noninteractive
-      
-      sudo apt-get update
-      sudo apt-get install -y ca-certificates curl
-
-    permissions: '0755'
+package_update: true
+package_upgrade: true
 runcmd:
-  - ["sh", "/run/scripts/init-script.sh" ]
+  - ["sh", "/var/lib/cloud/instance/scripts/init.sh" ]
+users:
+  - name: provisioner
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${provisioner_ssh_key}
+  - name: ollama
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ollama_ssh_key}
+    sudo: ALL=(ALL) NOPASSWD:ALL
