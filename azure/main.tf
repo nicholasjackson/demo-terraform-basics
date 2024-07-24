@@ -18,7 +18,7 @@ variable "machine" {
   # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM
   default = {
     "gpu" : { "type" : "Standard_NC4as_T4_v3", "publisher" : "Debian", offer : "Debian-11", sku : "11-backports-gen2", version : "latest" },
-    "cpu" : { "type" : "Standard_DS1_v2", "image" : "debian-11-bullseye-v20240611" }
+    "cpu" : { "type" : "Standard_F2s", "publisher" : "Debian", offer : "Debian-11", sku : "11-backports-gen2", version : "latest" }
   }
 }
 
