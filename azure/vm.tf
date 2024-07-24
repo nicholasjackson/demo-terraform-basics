@@ -55,7 +55,7 @@ data "template_cloudinit_config" "config" {
 
   part {
     content_type = "text/cloud-config"
-    content      = templatefile("./scripts/init.sh", {gpu_enabled=var.gpu_enabled, open_webui_password=random_password.password.result})
+    content      = templatefile("./scripts/init.yaml", {gpu_enabled=var.gpu_enabled, open_webui_password=random_password.password.result})
   }
 }
 
