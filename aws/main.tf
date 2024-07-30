@@ -17,8 +17,8 @@ variable "machine" {
   description = "The machine type and image to use for the VM"
   # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM
   default = {
-    "gpu" : { "type" : "g3s.xlarge", "version" : "debian-11-amd64-20240717-1811" }
-    "cpu" : { "type" : "t2.large", "version" : "debian-11-amd64-20240717-1811" }
+    "gpu" : { "type" : "Standard_NC4as_T4_v3", "publisher" : "Debian", offer : "Debian-11", sku : "11-backports-gen2", version : "latest" },
+    "cpu" : { "type" : "Standard_F2s", "publisher" : "Debian", offer : "Debian-11", sku : "11-backports-gen2", version : "latest" }
   }
 }
 
@@ -34,9 +34,9 @@ variable "ssh_pub_key" {
 
 terraform {
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "3.112.0"
+    aws = {
+      source = "hashicorp/aws"
+      version = "5.59.0"
     }
     cloudinit = {
       source  = "hashicorp/cloudinit"
@@ -49,11 +49,5 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {}
-}
-
-resource "azurerm_resource_group" "vm" {
-  name     = var.project
-  location = var.region
+provider "aws" {
 }
