@@ -5,7 +5,7 @@ variable "project" {
 
 variable "region" {
   description = "Region to deploy the resources"
-  default     = "West Europe"
+  default     = "eu-west-1"
 }
 
 variable "gpu_enabled" {
@@ -17,8 +17,8 @@ variable "machine" {
   description = "The machine type and image to use for the VM"
   # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM
   default = {
-    "gpu" : { "type" : "Standard_NC4as_T4_v3", "publisher" : "Debian", offer : "Debian-11", sku : "11-backports-gen2", version : "latest" },
-    "cpu" : { "type" : "Standard_F2s", "publisher" : "Debian", offer : "Debian-11", sku : "11-backports-gen2", version : "latest" }
+    "gpu" : { "type" : "g4dn.xlarge"},
+    "cpu" : { "type" : "t3.micro"},
   }
 }
 
