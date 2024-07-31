@@ -10,8 +10,6 @@ apt-get install -y ca-certificates curl sqlite3 apache2-utils
 # Setup Docker
 
 ## Add Docker's official GPG key:
-apt-get update
-apt-get install -y ca-certificates curl
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 chmod a+r /etc/apt/keyrings/docker.asc
@@ -35,6 +33,7 @@ mkdir -p /etc/open-webui.d/
 ## At present the only way to do this is to create the database with an admin account already created.
 
 PASSWD=$(htpasswd -bnBC 10 "" "${open_webui_password}" | tr -d ':\n')
+USER=${open_webui_user}
 
 cat << EOF > /etc/open-webui.d/webui.sql
 PRAGMA foreign_keys=OFF;
@@ -61,7 +60,7 @@ INSERT INTO migratehistory VALUES(18,'018_add_function_is_global','2024-07-02 06
 CREATE TABLE IF NOT EXISTS "tag" ("id" VARCHAR(255) NOT NULL, "name" VARCHAR(255) NOT NULL, "user_id" VARCHAR(255) NOT NULL, "data" TEXT);
 CREATE TABLE IF NOT EXISTS "chatidtag" ("id" VARCHAR(255) NOT NULL, "tag_name" VARCHAR(255) NOT NULL, "chat_id" VARCHAR(255) NOT NULL, "user_id" VARCHAR(255) NOT NULL, "timestamp" INTEGER NOT NULL NOT NULL);
 CREATE TABLE IF NOT EXISTS "auth" ("id" VARCHAR(255) NOT NULL, "email" VARCHAR(255) NOT NULL, "password" TEXT NOT NULL NOT NULL, "active" INTEGER NOT NULL);
-INSERT INTO auth VALUES('488af2d3-dd38-4310-a549-6d8ad11ae69e','admin@demo.gs','$${PASSWD}',1);
+INSERT INTO auth VALUES('488af2d3-dd38-4310-a549-6d8ad11ae69e','$${USER}','$${PASSWD}',1);
 CREATE TABLE IF NOT EXISTS "chat" ("id" VARCHAR(255) NOT NULL, "user_id" VARCHAR(255) NOT NULL, "title" TEXT NOT NULL NOT NULL, "chat" TEXT NOT NULL, "share_id" VARCHAR(255), "archived" INTEGER NOT NULL, "created_at" DATETIME NOT NULL NOT NULL, "updated_at" DATETIME NOT NULL NOT NULL);
 CREATE TABLE IF NOT EXISTS "document" ("id" INTEGER NOT NULL PRIMARY KEY, "collection_name" VARCHAR(255) NOT NULL, "name" VARCHAR(255) NOT NULL, "title" TEXT NOT NULL NOT NULL, "filename" TEXT NOT NULL NOT NULL, "content" TEXT, "user_id" VARCHAR(255) NOT NULL, "timestamp" INTEGER NOT NULL NOT NULL);
 CREATE TABLE IF NOT EXISTS "prompt" ("id" INTEGER NOT NULL PRIMARY KEY, "command" VARCHAR(255) NOT NULL, "user_id" VARCHAR(255) NOT NULL, "title" TEXT NOT NULL NOT NULL, "content" TEXT NOT NULL, "timestamp" INTEGER NOT NULL NOT NULL);
@@ -133,9 +132,9 @@ systemctl enable ollama.service
 
 # Install Nvidia Driver
 echo 'deb http://deb.debian.org/debian/ sid main contrib non-free non-free-firmware' >> /etc/apt/sources.list
-apt update
-apt install -y linux-headers-amd64
-apt install -y nvidia-driver firmware-misc-nonfree
+apt-get update
+apt-get install -y linux-headers-amd64
+apt-get install -y nvidia-driver firmware-misc-nonfree
 
 ## Install Nvidia Container Toolkit
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \

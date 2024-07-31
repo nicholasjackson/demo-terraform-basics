@@ -98,34 +98,38 @@ resource "aws_key_pair" "ollama" {
   public_key = file(var.ssh_pub_key)
 }
 
-resource "aws_instance" "ollama" {
-  ami           = data.aws_ami.debian.id
-  instance_type = var.gpu_enabled ? var.machine.gpu.type : var.machine.cpu.type
-  key_name      = resource.aws_key_pair.ollama.key_name
-
+resource "aws_spot_instance_request" "ollama" {
+  ami                         = data.aws_ami.debian.id
+  instance_type               = var.gpu_enabled ? var.machine.gpu.type : var.machine.cpu.type
+  key_name                    = resource.aws_key_pair.ollama.key_name
+  wait_for_fulfillment        = true
   associate_public_ip_address = true
 
   security_groups = [
     "${aws_security_group.ssh.id}",
     "${aws_security_group.http.id}"
-    ]
-  subnet_id       = aws_subnet.subnet.id
+  ]
+
+  subnet_id = aws_subnet.subnet.id
 
   user_data_base64 = base64encode(templatefile("${path.module}/scripts/init.sh",
     {
-      gpu_enabled          = var.gpu_enabled
+      gpu_enabled         = var.gpu_enabled
+      open_webui_user     = var.open_webui_user
       open_webui_password = random_password.password.result
-      openai_key         = var.openai_key
+      openai_key          = var.openai_key
   }))
+
+  root_block_device {
+    volume_size = 60
+  }
 }
 
 # Create a terracurl request to check if the web server is up and running
 # Wait a max of 20 minutes with a 10 second interval
 resource "terracurl_request" "ollama" {
-  depends_on = [ aws_instance.ollama ]
-  
-  name = "ollama"
-  url = "http://${aws_instance.ollama.public_ip}"
+  name   = "ollama"
+  url    = "http://${aws_spot_instance_request.ollama.public_ip}"
   method = "GET"
 
   response_codes = [200]

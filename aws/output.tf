@@ -1,5 +1,5 @@
 output "public_ip" {
-  value = aws_instance.ollama.public_ip
+  value = aws_spot_instance_request.ollama.public_ip
 }
 
 output "password" {
