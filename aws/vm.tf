@@ -115,6 +115,7 @@ resource "aws_instance" "ollama" {
     {
       gpu_enabled          = var.gpu_enabled
       open_webui_password = random_password.password.result
+      openai_key         = var.openai_key
   }))
 }
 

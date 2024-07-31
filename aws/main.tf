@@ -10,7 +10,7 @@ variable "region" {
 
 variable "gpu_enabled" {
   description = "Is the VM GPU enabled"
-  default     = true
+  default     = false
 }
 
 variable "machine" {
@@ -25,6 +25,11 @@ variable "machine" {
 variable "open_web_ui_user" {
   description = "Username to access the web UI"
   default     = "admin@demo.gs"
+}
+
+variable "openai_key" {
+  description = "Optional API key to use OpenAI API with Ollama UI"
+  default     = "" 
 }
 
 variable "ssh_pub_key" {

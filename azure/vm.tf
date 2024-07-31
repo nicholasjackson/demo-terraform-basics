@@ -65,6 +65,7 @@ data "cloudinit_config" "config" {
     content = templatefile("./scripts/init.yaml", {
       provisioner_ssh_key = tls_private_key.provisioner.public_key_openssh
       ollama_ssh_key      = var.ssh_pub_key
+      openai_key         = var.openai_key
     })
   }
 }

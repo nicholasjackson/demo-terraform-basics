@@ -93,6 +93,10 @@ EOF
 
 sqlite3 /etc/open-webui.d/webui.db < /etc/open-webui.d/webui.sql
 
+%{ if openai_key != "" }
+OPENAI_FLAG="-e OPENAI_API_KEY=${openai_key}"
+%{ endif }
+
 %{ if gpu_enabled }
 ## Set the GPU flag used in Docker
 GPU_FLAG="--gpus=all"
@@ -115,7 +119,7 @@ Restart=always
 ExecStartPre=-/usr/bin/docker stop %n
 ExecStartPre=-/usr/bin/docker rm %n
 ExecStartPre=/usr/bin/docker pull ghcr.io/open-webui/open-webui:ollama
-ExecStart=/usr/bin/docker run -p 80:8080 $${GPU_FLAG} -e RAG_EMBEDDING_MODEL_AUTO_UPDATE=true -v /etc/ollama.d:/root/.ollama -v /etc/open-webui.d:/app/backend/data --name %n ghcr.io/open-webui/open-webui:ollama
+ExecStart=/usr/bin/docker run -p 80:8080 $${OPENAI_FLAG} $${GPU_FLAG} -e RAG_EMBEDDING_MODEL_AUTO_UPDATE=true -v /etc/ollama.d:/root/.ollama -v /etc/open-webui.d:/app/backend/data --name %n ghcr.io/open-webui/open-webui:ollama
 
 [Install]
 WantedBy=multi-user.target

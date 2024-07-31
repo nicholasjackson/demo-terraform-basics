@@ -22,6 +22,11 @@ variable "machine" {
   }
 }
 
+variable "openai_key" {
+  description = "Optional API key to use OpenAI API with Ollama UI"
+  default     = ""
+}
+
 variable "open_web_ui_user" {
   description = "Username to access the web UI"
   default     = "admin@demo.gs"
