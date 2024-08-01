@@ -64,6 +64,8 @@ The following variables are used in this example:
 
 ## Authentication
 
+### AWS IAM
+
 To run this example you will need an AWS Account and a valid AWS access key and 
 secret. An AWS Free Tier account can be used to create the CPU example shown in this
 demo. You can sign up for an AWS account at the following link.
@@ -96,6 +98,27 @@ export AWS_SECRET_ACCESS_KEY="$(${command} item get "Terraform Basics" --fields 
 export AWS_REGION="$(${command} item get "Terraform Basics" --fields "Region")"
 export TF_VAR_region="$(${command} item get "Terraform Basics" --fields "Region")"
 export TF_VAR_openai_key="$(${command} item get "Terraform Basics" --fields "API Key")"
+```
+
+### Open AI API
+
+When using the small CPU instance of Open Web UI it is not possible to run a local LLM
+as the machine does not have a GPU and has limited CPU and memory. As a replacement
+it is possible to configure Open Web UI to send requests to an Open AI compatible
+API.
+
+To use this feature you need an account with a service such as Open AI and sufficient
+credits to use the integration.
+
+https://openai.com/api/pricing/
+
+To use this integration obtain your API key and set the following environment
+variables.
+
+```shell
+# openai_base is only needed if not using the default Open AI API url
+export TF_VAR_openai_base="https://api.openai.com/v1"
+export TF_VAR_openai_key="your key"
 ```
 
 ## Running the Example
