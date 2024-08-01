@@ -10,7 +10,7 @@ variable "region" {
 
 variable "gpu_enabled" {
   description = "Is the VM GPU enabled"
-  default     = true
+  default     = false
 }
 
 variable "machine" {

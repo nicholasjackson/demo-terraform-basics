@@ -44,6 +44,24 @@ deploy it. An example for Packer can be found in this repository.
 * 1x Random Password
 * 1x Terracurl Request
 
+## Variables
+
+The following variables are used in this example:
+
+| Name | Default | Description | 
+|------|---------|-------------|
+| **project** | terraform-basics-test | The name of the project |
+| **region** | eu-west-1 | The AWS region to deploy the resources in |
+| **gpu_enabled** | false | When set to true Terraform will deploy a GPU based Virtual Machine based on a g4dn.xlarge, when false a t3.micro is used |
+| **open_webui_user** | admin@demo.gs | The username to use with Open Web UI |
+| **openai_key** | "" | The Open AI API Key to use with Open Web UI |
+
+
+* `project` - The name of the project
+* `region` - The AWS region to deploy the resources in
+* `gpu_enabled` - When set to true Terraform will deploy a GPU based Virtual Machine 
+* 
+
 ## Authentication
 
 To run this example you will need an AWS Account and a valid AWS access key and 
@@ -59,10 +77,11 @@ the walk through video:
 [Walk Through link]()
 
 It is incredibly important to ensure that your credentials stay secret. Terraform
-can read credentials from environment variables, rather than hard coding these credentials in an environment script, 1Password users can store them in 1Password
-and then use the 1password CLI to populate the environment variables. The following script shows how you can set environment variables using the `op` CLI. This script 
-can then be safely sourced from your bash profile or can be dynamically loaded using
-a tool like `direnv`.
+can read credentials from environment variables, rather than hard coding these credentials 
+in an environment script, 1Password users can store them in 1Password and then use 
+the 1password CLI to populate the environment variables. The following script shows how 
+you can set environment variables using the `op` CLI. This script can then be safely sourced 
+from your bash profile or can be dynamically loaded using a tool like `direnv`.
 
 ```shell
 command=op
@@ -78,3 +97,12 @@ export AWS_REGION="$(${command} item get "Terraform Basics" --fields "Region")"
 export TF_VAR_region="$(${command} item get "Terraform Basics" --fields "Region")"
 export TF_VAR_openai_key="$(${command} item get "Terraform Basics" --fields "API Key")"
 ```
+
+## Running the Example
+
+To run the example you need to have Terraform installed on your machine. The
+Terraform installation instructions can be found at the following link:
+
+[https://learn.hashicorp.com/tutorials/terraform/install-cli](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+
+Once you have installed Terraform and have the AWS credentials set in your environment
