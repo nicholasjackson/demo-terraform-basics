@@ -17,8 +17,8 @@ variable "machine" {
   description = "The machine type and image to use for the VM"
   # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM
   default = {
-    "gpu" : { "type" : "g4dn.xlarge" },
-    "cpu" : { "type" : "t3.micro" },
+    "gpu" : { "type" : "g4dn.xlarge", "script" : "scripts/provision.sh" },
+    "cpu" : { "type" : "t3.micro", "script" : "scripts/provision.sh" },
   }
 }
 

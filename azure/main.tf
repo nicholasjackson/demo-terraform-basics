@@ -23,7 +23,7 @@ variable "machine" {
 }
 
 variable "openai_key" {
-  description = "Optional API key to use OpenAI API with Ollama UI"
+  description = "Optional API key to use OpenAI API with open_web_ui UI"
   default     = ""
 }
 
