@@ -31,20 +31,17 @@ apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 # Install the open_web_ui UI Server
 mkdir -p /etc/open-webui.d/
 
-# if the openai_key is set, then we need to pass it to the container
-%{ if openai_key != "" }
-OPENAI_KEY="-e OPENAI_API_KEY=${openai_key}"
-OPENAI_BASE="-e OPENAI_API_BASE_URLS=${openai_base}"
-%{ endif }
-
-# if the gpu_enabled is set, then we need to enable the GPU in Docker
-%{ if gpu_enabled }
-## Set the GPU flag used in Docker
-GPU_FLAG="--gpus=all"
-%{ endif }
+# Start Open Web UI for the first time so that it creates the database
+/usr/bin/docker pull ghcr.io/open-webui/open-webui:ollama
+/usr/bin/docker run -d -v /etc/open-webui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name openwebui ghcr.io/open-webui/open-webui:ollama
+sleep 10 # Wait 10s for the server to start and the database to be created
+/usr/bin/docker stop openwebui
+/usr/bin/docker rm openwebui
 
 ## Create the systemd unit
-cat << EOF > /etc/systemd/system/openwebui.service
+## When starting systemd will load the environment file and pass the variables to the container
+## The environment variables will be provisioned when the VM is created by Terraform
+cat << 'EOF' > /etc/systemd/system/openwebui.service
 [Unit]
 Description=Open Web UI
 After=docker.service
@@ -54,10 +51,10 @@ Requires=docker.service
 TimeoutStartSec=0
 Type=simple
 Restart=always
+EnvironmentFile=/etc/open-webui.d/openwebui.env
 ExecStartPre=-/usr/bin/docker stop %n
 ExecStartPre=-/usr/bin/docker rm %n
-ExecStartPre=/usr/bin/docker pull ghcr.io/open-webui/open-webui:ollama
-ExecStart=/usr/bin/docker run -p 80:8080 $${OPENAI_KEY} $${OPENAI_BASE} $${GPU_FLAG} -e RAG_EMBEDDING_MODEL_AUTO_UPDATE=true -v /etc/open_web_ui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name %n ghcr.io/open-webui/open-webui:ollama
+ExecStart=/usr/bin/docker run -p 80:8080 $OPENAI_KEY $OPENAI_BASE $GPU_FLAG -e RAG_EMBEDDING_MODEL_AUTO_UPDATE=true -v /etc/open-webui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name %n ghcr.io/open-webui/open-webui:ollama
 
 [Install]
 WantedBy=multi-user.target
@@ -65,11 +62,9 @@ EOF
 
 ## Reload systemd and enable the service
 systemctl daemon-reload
-systemctl enable openwebui.service
 
-# If the GPU is enabled, then we need to install the Nvidia drivers and the
+# Install the Nvidia drivers and the
 # Nvidia Container Toolkit
-%{ if gpu_enabled }
 
 # Install Nvidia Driver
 echo 'deb http://deb.debian.org/debian/ sid main contrib non-free non-free-firmware' >> /etc/apt/sources.list
@@ -88,12 +83,3 @@ apt-get install -y nvidia-container-toolkit
 
 ## Configure Docker
 nvidia-ctk runtime configure --runtime=docker
-
-# Reboot the system, this is required to load the Nvidia drivers
-reboot
-%{ endif }
-
-# Start the service if not installing the GPU drivers
-# if the GPU drivers are being installed, then the system will reboot and the 
-# service will be started automatically
-systemctl start openwebui.service

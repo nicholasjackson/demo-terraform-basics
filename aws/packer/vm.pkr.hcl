@@ -41,6 +41,13 @@ source "amazon-ebs" "open-webui" {
   instance_type = "t2.micro"
   ssh_username  = "admin"
   ami_name      = "open_webui_{{timestamp}}"
+
+  launch_block_device_mappings {
+    device_name           = "/dev/xvda"
+    delete_on_termination = true
+    volume_type           = "gp2"
+    volume_size           = 60
+  }
 }
 
 build {
@@ -48,7 +55,12 @@ build {
     "source.amazon-ebs.open-webui"
   ]
 
+  provisioner "file" {
+    source      = "scripts/provision.sh"
+    destination = "/tmp/provision.sh"
+  }
+
   provisioner "shell" {
-    script = "scripts/install.sh"
+    inline = ["sudo bash /tmp/provision.sh"]
   }
 }

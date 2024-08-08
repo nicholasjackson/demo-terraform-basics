@@ -17,9 +17,19 @@ variable "machine" {
   description = "The machine type and image to use for the VM"
   # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM
   default = {
-    "gpu" : { "type" : "g4dn.xlarge", "script" : "scripts/provision.sh" },
-    "cpu" : { "type" : "t3.micro", "script" : "scripts/provision.sh" },
+    "gpu" : { "type" : "g4dn.xlarge" },
+    "cpu" : { "type" : "t3.micro" },
   }
+}
+
+variable "provision_script" {
+  description = "Path to the script to provision the VM"
+  default     = "scripts/provision.sh"
+}
+
+variable "custom_ami" {
+  description = "AMI to use for the VM rather than default debian"
+  default     = ""
 }
 
 variable "open_webui_user" {
