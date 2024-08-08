@@ -192,6 +192,39 @@
 			"  default     = \"\"",
 			"}"
 		]
+	},
+	"14_tmpl_ai_api": {
+		"prefix": "14_tmpl_ai_api",
+		"description": "",
+		"scope": "",
+		"body": [
+			"%{ if openai_key != \"\" }",
+			"echo \"OPENAI_KEY='-e OPENAI_API_KEY=${openai_key}'\" >> /etc/open-webui.d/openwebui.env",
+			"echo \"OPENAI_BASE='-e OPENAI_API_BASE_URLS=${openai_base}'\" >> /etc/open-webui.d/openwebui.env",
+			"%{ endif }"
+		]
+	},
+	"15_random": {
+		"prefix": "15_random",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"random_password\" \"password\" {",
+			"  length           = 16",
+			"  special          = false",
+			"}"
+		]
+	},
+	"16_output": {
+		"prefix": "16_output",
+		"description": "",
+		"scope": "",
+		"body": [
+			"output \"password\" {",
+			"  sensitive = true",
+			"  value = random_password.password.result",
+			"}"
+		]
 	}
 	// Place your demo-terraform-basics workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
 	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 

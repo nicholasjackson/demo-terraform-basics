@@ -11,6 +11,11 @@ data "aws_ami" "debian" {
   owners = ["136693071363"] # Debian
 }
 
+resource "random_password" "password" {
+  length           = 16
+  special          = false
+}
+
 resource "aws_vpc" "open_web_ui" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -106,9 +111,10 @@ resource "aws_spot_instance_request" "cheap_worker" {
 
   subnet_id = aws_subnet.subnet.id
 
-  user_data_base64 = base64encode(templatefile("./scripts/provision_basic.sh", 
+  user_data_base64 = base64encode(templatefile("./scripts/provision_vars.sh", 
   {
     open_webui_user = var.open_webui_user,
+    open_webui_password = random_password.password.result,
     openai_base     = var.openai_base,
     openai_key      = var.openai_key
   }))
