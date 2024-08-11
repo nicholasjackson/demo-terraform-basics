@@ -41,7 +41,7 @@ USER="${open_webui_user}"
 
 # Start Open Web UI for the first time so that it creates the database
 /usr/bin/docker pull ghcr.io/open-webui/open-webui:ollama
-/usr/bin/docker run -d -v /etc/open_web_ui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name openwebui ghcr.io/open-webui/open-webui:ollama
+/usr/bin/docker run -d -v /etc/open-webui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name openwebui ghcr.io/open-webui/open-webui:ollama
 sleep 10 # Wait 10s for the server to start and the database to be created
 /usr/bin/docker stop openwebui
 /usr/bin/docker rm openwebui
@@ -81,7 +81,7 @@ Restart=always
 EnvironmentFile=/etc/open-webui.d/openwebui.env
 ExecStartPre=-/usr/bin/docker stop %n
 ExecStartPre=-/usr/bin/docker rm %n
-ExecStart=/usr/bin/docker run -p 80:8080 $${OPENAI_KEY} $${OPENAI_BASE} -e RAG_EMBEDDING_MODEL_AUTO_UPDATE=true -v /etc/open_web_ui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name %n ghcr.io/open-webui/open-webui:ollama
+ExecStart=/usr/bin/docker run -p 80:8080 $OPENAI_KEY $OPENAI_BASE -e RAG_EMBEDDING_MODEL_AUTO_UPDATE=true -v /etc/open_web_ui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name %n ghcr.io/open-webui/open-webui:ollama
 
 [Install]
 WantedBy=multi-user.target
