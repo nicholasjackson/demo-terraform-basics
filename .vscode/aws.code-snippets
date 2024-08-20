@@ -5,7 +5,7 @@
 		"scope": "",
 		"body": [
 			"resource \"aws_vpc\" \"open_web_ui\" {",
-			"  cidr_block           = \"10.1.0.0/12\"",
+			"  cidr_block           = \"10.0.0.0/16\"",
 			"  enable_dns_hostnames = true",
 			"  enable_dns_support   = true",
 			"}"
@@ -199,8 +199,8 @@
 		"scope": "",
 		"body": [
 			"%{ if openai_key != \"\" }",
-			"echo \"OPENAI_KEY='-e OPENAI_API_KEY=${openai_key}'\" >> /etc/open-webui.d/openwebui.env",
-			"echo \"OPENAI_BASE='-e OPENAI_API_BASE_URLS=${openai_base}'\" >> /etc/open-webui.d/openwebui.env",
+			"echo \"OPENAI_KEY='-e OPENAI_API_KEY=\\${openai_key}'\" >> /etc/open-webui.d/openwebui.env",
+			"echo \"OPENAI_BASE='-e OPENAI_API_BASE_URLS=\\${openai_base}'\" >> /etc/open-webui.d/openwebui.env",
 			"%{ endif }"
 		]
 	},
@@ -224,6 +224,75 @@
 			"  sensitive = true",
 			"  value = random_password.password.result",
 			"}"
+		]
+	},
+	"17_complex_var": {
+		"prefix": "17_complex_var",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"machine\" {",
+			"  description = \"The machine type and image to use for the VM\"",
+			"  # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM",
+			"  default = {",
+			"    \"gpu\" : { \"type\" : \"g4dn.xlarge\" },",
+			"    \"cpu\" : { \"type\" : \"t3.micro\" },",
+			"  }",
+			"}"
+		]
+	},
+	"18_gpu_var": {
+		"prefix": "18_gpu_var",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"gpu_enabled\" {",
+			"  description = \"Is the VM GPU enabled\"",
+			"  default     = false",
+			"}"
+		]
+	},
+	"19_gpu_enabled": {
+		"prefix": "19_gpu_enabled",
+		"description": "",
+		"scope": "",
+		"body": [
+			"# If the GPU is enabled, then we need to install the Nvidia drivers and the",
+			"# Nvidia Container Toolkit",
+			"%{ if gpu_enabled }",
+			"echo \"GPU_FLAG='--gpus=all'\" >> /etc/open-webui.d/openwebui.env",
+			"",
+			"# Install Nvidia Driver",
+			"echo 'deb http://deb.debian.org/debian/ sid main contrib non-free non-free-firmware' >> /etc/apt/sources.list",
+			"apt-get update",
+			"apt-get install -y linux-headers-amd64",
+			"apt-get install -y nvidia-driver firmware-misc-nonfree",
+			"",
+			"## Install Nvidia Container Toolkit",
+			"curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \\",
+			"  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \\",
+			"    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \\",
+			"    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list",
+			"",
+			"apt-get update",
+			"apt-get install -y nvidia-container-toolkit",
+			"",
+			"## Configure Docker",
+			"nvidia-ctk runtime configure --runtime=docker",
+			"",
+			"# Reboot the system, this is required to load the Nvidia drivers",
+			"reboot",
+			"%{ endif }"
+		]
+	},
+	"20_block": {
+		"prefix": "20_block",
+		"description": "",
+		"scope": "",
+		"body": [
+			"  root_block_device {",
+			"    volume_size = 60",
+			"  }"
 		]
 	}
 	// Place your demo-terraform-basics workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
