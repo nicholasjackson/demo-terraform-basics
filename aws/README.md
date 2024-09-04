@@ -1,4 +1,4 @@
-# Basic Terraform example to create a Virtual Machine on AWS
+# Terraform example to create a Virtual Machine on AWS and provision Open Web UI
 
 The purpose of this example is to show some of the more basic features of Terraform:
 * Providers
@@ -20,7 +20,7 @@ It is acknowledged that the provision of the Open Web UI application using Cloud
 Init is not the most optimal way to provision an applications with Terraform.
 This approach has been taken for simplicty, a more production ready approach would
 be to use Packer to bake a VM with the software installed and then use Terraform to
-deploy it. An example for Packer can be found in this repository.
+deploy it. An example for Packer can be found in the `./packer` sub folder.
 
 ## Requirements
 
@@ -50,10 +50,10 @@ The following variables are used in this example:
 
 | Name        | Default               | Description                               |
 |-------------|-----------------------|-------------------------------------------|
-| **project** | terraform-basics-test | The name of the project                   |
-| **region**  | eu-west-1             | The AWS region to deploy the resources in |
 | **gpu_enabled** | false | When set to true Terraform will deploy a GPU based Virtual Machine based on a g4dn.xlarge, when false a t3.micro is used |
 | **machine** | t3.micro, g4dn.xlarge | The type of Virtual Machine to deploy, selected dependent on gpu_enabled variable |
+| **ami_name** | debian-11-amd64-* | The name of the AMI to use for the Virtual Machine | 
+| **ami_owner** | 136693071363 | The owner of the AMI to use for the Virtual Machine, default: debian | 
 | **open_webui_user** | admin@demo.gs | The username to use with Open Web UI |
 | **openai_base** | https://api.openai.com/v1 | The base URL for the Open AI API
 | **openai_key** | "" | The Open AI API Key to use with Open Web UI |
@@ -191,7 +191,7 @@ the Open Web UI application.
 
 ```shell
 admin@ip-10-1-0-50:~$ sudo docker ps
-CONTAINER ID   IMAGE                                  COMMAND           CREATED         STATUS                   PORTS                                   NAMES
+CONTAINER ID   IMAGE                                       COMMAND           CREATED         STATUS                   PORTS                                   NAMES
 f7d07f08d101   ghcr.io/open-webui/open-webui:open_web_ui   "bash start.sh"   8 minutes ago   Up 8 minutes (healthy)   0.0.0.0:80->8080/tcp, :::80->8080/tcp   open_web_ui.service
 ```
 
@@ -222,3 +222,9 @@ terraform output password
 
 ## Cleaning Up
 
+To clean up the resources created by this example you can use the `terraform destroy`
+command.
+
+```shell
+terraform destroy
+```

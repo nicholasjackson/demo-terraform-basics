@@ -1,13 +1,3 @@
-variable "project" {
-  description = "Name of the Azure resource group"
-  default     = "terraform-basics-test"
-}
-
-variable "region" {
-  description = "Region to deploy the resources"
-  default     = ""
-}
-
 variable "gpu_enabled" {
   description = "Is the VM GPU enabled"
   default     = false
@@ -17,9 +7,34 @@ variable "machine" {
   description = "The machine type and image to use for the VM"
   # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM
   default = {
-    "gpu" : { "type" : "g4dn.xlarge", "script" : "scripts/provision.sh" },
-    "cpu" : { "type" : "t3.micro", "script" : "scripts/provision.sh" },
+    "gpu" : { "type" : "g4dn.xlarge" },
+    "cpu" : { "type" : "t3.micro" },
   }
+}
+
+variable "provision_script" {
+  description = <<EOF
+    Path to the script to provision the VM, use scripts/provision_vars.sh 
+    when using a base image such as debian.
+
+    When using the custom AMI built by Packer from this repository, you can 
+    use the path to the scripts/configure.sh that only sets the required 
+    environment variables.
+  EOF
+
+  default     = "scripts/provision_vars.sh"
+}
+
+variable "ami_name" {
+  description = "The name of the AMI to use for the VM, default is the latest Debian 11 AMI"
+
+  default = "debian-11-amd64-*"
+}
+
+variable "ami_owners" {
+  description = "The owners of the AMI to use for the VM, default is the official Debian AMI"
+
+  default = ["136693071363"]
 }
 
 variable "open_webui_user" {

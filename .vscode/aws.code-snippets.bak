@@ -1,0 +1,314 @@
+{
+	"1_vpc": {
+		"prefix": "1_vpc",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"aws_vpc\" \"open_web_ui\" {",
+			"  cidr_block           = \"10.0.0.0/16\"",
+			"  enable_dns_hostnames = true",
+			"  enable_dns_support   = true",
+			"}"
+		]
+	},
+	"2_subnet": {
+		"prefix": "2_subnet",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"aws_subnet\" \"subnet\" {",
+			"  cidr_block        = cidrsubnet(aws_vpc.open_web_ui.cidr_block, 3, 1)",
+			"  vpc_id            = aws_vpc.open_web_ui.id",
+			"  availability_zone = \"eu-central-1a\"",
+			"}"
+		]
+	},
+	"3_gateway": {
+		"prefix": "3_gateway",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"aws_internet_gateway\" \"open_web_ui\" {",
+			"  vpc_id = aws_vpc.open_web_ui.id",
+			"}"
+		]
+	},
+	"4_route_table": {
+		"prefix": "4_route_table",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"aws_route_table\" \"open_web_ui\" {",
+			"  vpc_id = aws_vpc.open_web_ui.id",
+			"",
+			"",
+			"  route {",
+			"    cidr_block = \"0.0.0.0/0\"",
+			"    gateway_id = aws_internet_gateway.open_web_ui.id",
+			"  }",
+			"}"
+		]
+	},
+	"5_table_association": {
+		"prefix": "5_table_association",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"aws_route_table_association\" \"open_web_ui\" {",
+			"  subnet_id      = aws_subnet.subnet.id",
+			"  route_table_id = aws_route_table.open_web_ui.id",
+			"}"
+		]
+	},
+	"6_security_group": {
+		"prefix": "6_security_group",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"aws_security_group\" \"ssh\" {",
+			"  name = \"allow-all\"",
+			"",
+			"  vpc_id = aws_vpc.open_web_ui.id",
+			"",
+			"  ingress {",
+			"    cidr_blocks = [",
+			"      \"0.0.0.0/0\"",
+			"    ]",
+			"    from_port = 22",
+			"    to_port   = 22",
+			"    protocol  = \"tcp\"",
+			"  }",
+			"",
+			"  egress {",
+			"    from_port   = 0",
+			"    to_port     = 0",
+			"    protocol    = -1",
+			"    cidr_blocks = [\"0.0.0.0/0\"]",
+			"  }",
+			"}"
+		]
+	},
+	"7_key_pair": {
+		"prefix": "7_key_pair",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"aws_key_pair\" \"open_web_ui\" {",
+			"  key_name   = \"open_web_ui\"",
+			"  public_key = file(\"/tmp/id_rsa.pub\")",
+			"}"
+		]
+	},
+	"8_public_ip": {
+		"prefix": "8_public_ip",
+		"description": "",
+		"scope": "",
+		"body": [
+			"output \"public_ip\" {",
+			"  value = aws_spot_instance_request.open_web_ui.public_ip",
+			"}"
+		]
+	},
+	"9_terracurl": {
+		"prefix": "9_terracurl",
+		"description": "",
+		"scope": "",
+		"body": [
+			"    terracurl = {",
+			"      source  = \"devops-rob/terracurl\"",
+			"      version = \"1.2.1\"",
+			"    }"
+		]
+	},
+	"10_request": {
+		"prefix": "10_request",
+		"description": "",
+		"scope": "",
+		"body": [
+			"# Create a terracurl request to check if the web server is up and running",
+			"# Wait a max of 20 minutes with a 10 second interval",
+			"resource \"terracurl_request\" \"open_web_ui\" {",
+			"  name   = \"open_web_ui\"",
+			"  url    = \"http://${aws_spot_instance_request.open_web_ui.public_ip}\"",
+			"  method = \"GET\"",
+			"",
+			"  response_codes = [200]",
+			"  max_retry      = 120",
+			"  retry_interval = 10",
+			"}"
+		]
+	},
+	"11_http_sg": {
+		"prefix": "11_http_sg",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"aws_security_group\" \"http\" {",
+			"  name = \"allow-all-http\"",
+			"",
+			"  vpc_id = aws_vpc.open_web_ui.id",
+			"",
+			"  ingress {",
+			"    cidr_blocks = [",
+			"      \"0.0.0.0/0\"",
+			"    ]",
+			"    from_port = 80",
+			"    to_port   = 80",
+			"    protocol  = \"tcp\"",
+			"  }",
+			"",
+			"  egress {",
+			"    from_port   = 0",
+			"    to_port     = 0",
+			"    protocol    = -1",
+			"    cidr_blocks = [\"0.0.0.0/0\"]",
+			"  }",
+			"}"
+		]
+	},
+	"12_var_web_admin": {
+		"prefix": "12_var_web_admin",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"open_webui_user\" {",
+			"  description = \"Username to access the web UI\"",
+			"  default     = \"admin@demo.gs\"",
+			"}"
+		]
+	},
+	"13_var_openai": {
+		"prefix": "13_var_openai",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"openai_base\" {",
+			"  description = \"Optional base URL to use OpenAI API with Open Web UI\" ",
+			"  default     = \"https://api.openai.com/v1\"",
+			"}",
+			"",
+			"variable \"openai_key\" {",
+			"  description = \"Optional API key to use OpenAI API with Open Web UI\"",
+			"  default     = \"\"",
+			"}"
+		]
+	},
+	"14_tmpl_ai_api": {
+		"prefix": "14_tmpl_ai_api",
+		"description": "",
+		"scope": "",
+		"body": [
+			"%{ if openai_key != \"\" }",
+			"echo \"OPENAI_KEY='-e OPENAI_API_KEY=\\${openai_key}'\" >> /etc/open-webui.d/openwebui.env",
+			"echo \"OPENAI_BASE='-e OPENAI_API_BASE_URLS=\\${openai_base}'\" >> /etc/open-webui.d/openwebui.env",
+			"%{ endif }"
+		]
+	},
+	"15_random": {
+		"prefix": "15_random",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"random_password\" \"password\" {",
+			"  length           = 16",
+			"  special          = false",
+			"}"
+		]
+	},
+	"16_output": {
+		"prefix": "16_output",
+		"description": "",
+		"scope": "",
+		"body": [
+			"output \"password\" {",
+			"  sensitive = true",
+			"  value = random_password.password.result",
+			"}"
+		]
+	},
+	"17_complex_var": {
+		"prefix": "17_complex_var",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"machine\" {",
+			"  description = \"The machine type and image to use for the VM\"",
+			"  # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM",
+			"  default = {",
+			"    \"gpu\" : { \"type\" : \"g4dn.xlarge\" },",
+			"    \"cpu\" : { \"type\" : \"t3.micro\" },",
+			"  }",
+			"}"
+		]
+	},
+	"18_gpu_var": {
+		"prefix": "18_gpu_var",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"gpu_enabled\" {",
+			"  description = \"Is the VM GPU enabled\"",
+			"  default     = false",
+			"}"
+		]
+	},
+	"19_gpu_enabled": {
+		"prefix": "19_gpu_enabled",
+		"description": "",
+		"scope": "",
+		"body": [
+			"# If the GPU is enabled, then we need to install the Nvidia drivers and the",
+			"# Nvidia Container Toolkit",
+			"%{ if gpu_enabled }",
+			"echo \"GPU_FLAG='--gpus=all'\" >> /etc/open-webui.d/openwebui.env",
+			"",
+			"# Install Nvidia Driver",
+			"echo 'deb http://deb.debian.org/debian/ sid main contrib non-free non-free-firmware' >> /etc/apt/sources.list",
+			"apt-get update",
+			"apt-get install -y linux-headers-amd64",
+			"apt-get install -y nvidia-driver firmware-misc-nonfree",
+			"",
+			"## Install Nvidia Container Toolkit",
+			"curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \\",
+			"  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \\",
+			"    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \\",
+			"    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list",
+			"",
+			"apt-get update",
+			"apt-get install -y nvidia-container-toolkit",
+			"",
+			"## Configure Docker",
+			"nvidia-ctk runtime configure --runtime=docker",
+			"",
+			"# Reboot the system, this is required to load the Nvidia drivers",
+			"reboot",
+			"%{ endif }"
+		]
+	},
+	"20_block": {
+		"prefix": "20_block",
+		"description": "",
+		"scope": "",
+		"body": [
+			"  root_block_device {",
+			"    volume_size = 60",
+			"  }"
+		]
+	}
+	// Place your demo-terraform-basics workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
+	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
+	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is 
+	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are: 
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. 
+	// Placeholders with the same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"scope": "javascript,typescript",
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+}
