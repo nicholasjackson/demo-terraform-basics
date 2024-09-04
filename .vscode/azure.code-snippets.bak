@@ -1,0 +1,196 @@
+{
+	"1_public_ip": {
+		"prefix": "1_public_ip",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"azurerm_public_ip\" \"openwebui\" {",
+			"  name                = \"openwebui-ip\"",
+			"  location            = azurerm_resource_group.openwebui.location",
+			"  resource_group_name = azurerm_resource_group.openwebui.name",
+			"  allocation_method   = \"Static\"",
+			"}"
+		]
+	},
+	"2_output": {
+		"prefix": "2_output",
+		"description": "",
+		"scope": "",
+		"body": [
+			"output \"public_ip\" {",
+			"  value = resource.azurerm_public_ip.openwebui.ip_address",
+			"}"
+		]
+	},
+	"3_cloud_init": {
+		"prefix": "3_cloud_init",
+		"description": "",
+		"scope": "",
+		"body": [
+			"data \"cloudinit_config\" \"config\" {",
+			"  gzip          = true",
+			"  base64_encode = true",
+			"",
+			"  part {",
+			"    filename     = \"init.sh\"",
+			"    content_type = \"text/x-shellscript\"",
+			"",
+			"    content = file(\"${path.module}/scripts/provision_basic.sh\") ",
+			"  }",
+			"  ",
+			"  part {",
+			"    content_type = \"text/cloud-config\"",
+			"    content = file(\"${path.module}/scripts/init.yaml\")",
+			"  }",
+			"}"
+		]
+	},
+	"4_terracurl_request": {
+		"prefix": "4_terracurl_request",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"terracurl_request\" \"openwebui\" {",
+			"  name   = \"open_web_ui\"",
+			"  url    = \"http://${resource.azurerm_public_ip.openwebui.ip_address}\"",
+			"  method = \"GET\"",
+			"",
+			"  response_codes = [200]",
+			"  max_retry      = 120",
+			"  retry_interval = 10",
+			"}"
+		]
+	},
+	"5_var_web_admin": {
+		"prefix": "5_var_web_admin",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"open_webui_user\" {",
+			"  description = \"Username to access the web UI\"",
+			"  default     = \"admin@demo.gs\"",
+			"}"
+		]
+	},
+	"6_var_openai": {
+		"prefix": "6_var_openai",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"openai_base\" {",
+			"  description = \"Optional base URL to use OpenAI API with Open Web UI\" ",
+			"  default     = \"https://api.openai.com/v1\"",
+			"}",
+			"",
+			"variable \"openai_key\" {",
+			"  description = \"Optional API key to use OpenAI API with Open Web UI\"",
+			"  default     = \"\"",
+			"}"
+		]
+	},
+	"7_tmpl_ai_api": {
+		"prefix": "7_tmpl_ai_api",
+		"description": "",
+		"scope": "",
+		"body": [
+			"%{ if openai_key != \"\" }",
+			"echo \"OPENAI_KEY='-e OPENAI_API_KEY=\\${openai_key}'\" >> /etc/open-webui.d/openwebui.env",
+			"echo \"OPENAI_BASE='-e OPENAI_API_BASE_URLS=\\${openai_base}'\" >> /etc/open-webui.d/openwebui.env",
+			"%{ endif }"
+		]
+	},
+	"8_random": {
+		"prefix": "8_random",
+		"description": "",
+		"scope": "",
+		"body": [
+			"resource \"random_password\" \"password\" {",
+			"  length           = 16",
+			"  special          = false",
+			"}"
+		]
+	},
+	"9_password": {
+		"prefix": "9_password",
+		"description": "",
+		"scope": "",
+		"body": [
+			"output \"password\" {",
+			"  sensitive = true",
+			"  value = random_password.password.result",
+			"}"
+		]
+	},
+	"10_complex_var": {
+		"prefix": "10_complex_var",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"machine\" {",
+			"  description = \"The machine type and image to use for the VM\"",
+			"  # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM",
+			"  default = {",
+			"    \"gpu\" : { \"type\" : \"Standard_NC4as_T4_v3\" },",
+			"    \"cpu\" : { \"type\" : \"Standard_A2_v2\" },",
+			"  }",
+			"}"
+		]
+	},
+	"11_gpu_var": {
+		"prefix": "11_gpu_var",
+		"description": "",
+		"scope": "",
+		"body": [
+			"variable \"gpu_enabled\" {",
+			"  description = \"Is the VM GPU enabled\"",
+			"  default     = false",
+			"}"
+		]
+	},
+	"12_gpu_enabled": {
+		"prefix": "12_gpu_enabled",
+		"description": "",
+		"scope": "",
+		"body": [
+			"# If the GPU is enabled, then we need to install the Nvidia drivers and the",
+			"# Nvidia Container Toolkit",
+			"%{ if gpu_enabled }",
+			"echo \"GPU_FLAG='--gpus=all'\" >> /etc/open-webui.d/openwebui.env",
+			"",
+			"# Install Nvidia Driver",
+			"echo 'deb http://deb.debian.org/debian/ sid main contrib non-free non-free-firmware' >> /etc/apt/sources.list",
+			"apt-get update",
+			"apt-get install -y linux-headers-amd64",
+			"apt-get install -y nvidia-driver firmware-misc-nonfree",
+			"",
+			"## Install Nvidia Container Toolkit",
+			"curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \\",
+			"  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \\",
+			"    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \\",
+			"    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list",
+			"",
+			"apt-get update",
+			"apt-get install -y nvidia-container-toolkit",
+			"",
+			"## Configure Docker",
+			"nvidia-ctk runtime configure --runtime=docker",
+			"%{ endif }"
+		]
+	}
+	// Place your demo-terraform-basics workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
+	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
+	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is 
+	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are: 
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. 
+	// Placeholders with the same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"scope": "javascript,typescript",
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+}

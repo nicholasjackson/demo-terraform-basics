@@ -2,13 +2,13 @@ data "aws_ami" "debian" {
   most_recent = true
   filter {
     name   = "name"
-    values = ["debian-11-amd64-*"]
+    values = [var.ami_name]
   }
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
-  owners = ["136693071363"] # Debian
+  owners = var.ami_owners 
 }
 
 # Create a random password for the web UI
@@ -17,41 +17,41 @@ resource "random_password" "password" {
   special          = false
 }
 
-resource "aws_vpc" "open_web_ui" {
+resource "aws_vpc" "openwebui" {
   cidr_block           = "10.0.0.0/12"
   enable_dns_hostnames = true
   enable_dns_support   = true
 }
 
 resource "aws_subnet" "subnet" {
-  cidr_block        = cidrsubnet(aws_vpc.open_web_ui.cidr_block, 4, 1)
-  vpc_id            = aws_vpc.open_web_ui.id
+  cidr_block        = cidrsubnet(aws_vpc.openwebui.cidr_block, 4, 1)
+  vpc_id            = aws_vpc.openwebui.id
   availability_zone = "${var.region}a"
 }
 
-resource "aws_internet_gateway" "open_web_ui" {
-  vpc_id = aws_vpc.open_web_ui.id
+resource "aws_internet_gateway" "openwebui" {
+  vpc_id = aws_vpc.openwebui.id
 }
 
-resource "aws_route_table" "open_web_ui" {
-  vpc_id = aws_vpc.open_web_ui.id
+resource "aws_route_table" "openwebui" {
+  vpc_id = aws_vpc.openwebui.id
 
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.open_web_ui.id
+    gateway_id = aws_internet_gateway.openwebui.id
   }
 }
 
-resource "aws_route_table_association" "open_web_ui" {
+resource "aws_route_table_association" "openwebui" {
   subnet_id      = aws_subnet.subnet.id
-  route_table_id = aws_route_table.open_web_ui.id
+  route_table_id = aws_route_table.openwebui.id
 }
 
 resource "aws_security_group" "ssh" {
   name = "allow-all"
 
-  vpc_id = aws_vpc.open_web_ui.id
+  vpc_id = aws_vpc.openwebui.id
 
   ingress {
     cidr_blocks = [
@@ -73,7 +73,7 @@ resource "aws_security_group" "ssh" {
 resource "aws_security_group" "http" {
   name = "allow-all-http"
 
-  vpc_id = aws_vpc.open_web_ui.id
+  vpc_id = aws_vpc.openwebui.id
 
   ingress {
     cidr_blocks = [
@@ -92,15 +92,15 @@ resource "aws_security_group" "http" {
   }
 }
 
-resource "aws_key_pair" "open_web_ui" {
-  key_name   = "open_web_ui"
+resource "aws_key_pair" "openwebui" {
+  key_name   = "openwebui"
   public_key = file(var.ssh_pub_key)
 }
 
-resource "aws_spot_instance_request" "open_web_ui" {
+resource "aws_spot_instance_request" "openwebui" {
   ami                         = var.custom_ami != "" ? var.custom_ami : data.aws_ami.debian.id
   instance_type               = var.gpu_enabled ? var.machine.gpu.type : var.machine.cpu.type
-  key_name                    = resource.aws_key_pair.open_web_ui.key_name
+  key_name                    = resource.aws_key_pair.openwebui.key_name
   wait_for_fulfillment        = true
   associate_public_ip_address = true
 
@@ -127,9 +127,9 @@ resource "aws_spot_instance_request" "open_web_ui" {
 
 # Create a terracurl request to check if the web server is up and running
 # Wait a max of 20 minutes with a 10 second interval
-resource "terracurl_request" "open_web_ui" {
-  name   = "open_web_ui"
-  url    = "http://${aws_spot_instance_request.open_web_ui.public_ip}"
+resource "terracurl_request" "openwebui" {
+  name   = "openwebui"
+  url    = "http://${aws_spot_instance_request.openwebui.public_ip}"
   method = "GET"
 
   response_codes = [200]

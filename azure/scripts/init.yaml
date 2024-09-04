@@ -2,13 +2,3 @@ package_update: true
 package_upgrade: true
 runcmd:
   - ["sh", "/var/lib/cloud/instance/scripts/init.sh" ]
-users:
-  - name: provisioner
-    shell: /bin/bash
-    ssh_authorized_keys:
-      - ${provisioner_ssh_key}
-  - name: ollama
-    shell: /bin/bash
-    ssh_authorized_keys:
-      - ${ollama_ssh_key}
-    sudo: ALL=(ALL) NOPASSWD:ALL

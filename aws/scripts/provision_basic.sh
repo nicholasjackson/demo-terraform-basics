@@ -7,13 +7,47 @@ set -e
 # prompt for input
 export DEBIAN_FRONTEND=noninteractive
 
+# Install required packages
+apt-get update
+apt-get install -y ca-certificates curl sqlite3 apache2-utils
+
+# Setup Docker
+
+## Add Docker's official GPG key:
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+
+## Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+apt-get update
+
+## Install Docker
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Install the open_web_ui UI Server
+mkdir -p /etc/open-webui.d/
+
 ## Create the default db with an intial user
 ## Open WebUI uses SQLite as the default database, when first run it allows anyone to create an admin account
 ## since we are runnning this in a cloud environment, we need to create an admin account before starting the server.
 ## At present the only way to do this is to create the database with an admin account already created.
 
-PASSWD=$(htpasswd -bnBC 10 "" "${open_webui_password}" | tr -d ':\n')
-USER=${open_webui_user}
+PASSWD=$(htpasswd -bnBC 10 "" "mypassword" | tr -d ':\n')
+USER="admin@demo.gs"
+
+# Start Open Web UI for the first time so that it creates the database
+/usr/bin/docker pull ghcr.io/open-webui/open-webui:ollama
+/usr/bin/docker run -d -p 80:8080 -v /etc/open-webui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name openwebui ghcr.io/open-webui/open-webui:ollama
+
+# Wait for the server to start
+timeout 300 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost)" != "200" ]]; do sleep 5; done' || false
+
+/usr/bin/docker stop openwebui
+/usr/bin/docker rm openwebui
 
 # Update the database with the admin user
 cat << EOF > /etc/open-webui.d/webui.sql
@@ -29,19 +63,28 @@ sqlite3 /etc/open-webui.d/webui.db < /etc/open-webui.d/webui.sql
 # Cleanup
 rm -f /etc/open-webui.d/webui.sql
 
-# if the openai_key is set, then we need to pass it to the container
-# write these to the environment file that will be loaded by systemd
-%{ if openai_key != "" }
-echo "OPENAI_KEY='-e OPENAI_API_KEY=${openai_key}'" >> /etc/open-webui.d/openwebui.env
-echo "OPENAI_BASE='-e OPENAI_API_BASE_URLS=${openai_base}'" >> /etc/open-webui.d/openwebui.env
-%{ endif }
+## Create the systemd unit
+## When starting systemd will load the environment file and pass the variables to the container
+cat << 'EOF' > /etc/systemd/system/openwebui.service
+[Unit]
+Description=Open Web UI
+After=docker.service
+Requires=docker.service
 
-# if the gpu_enabled is set, then we need to enable the GPU in Docker
-# write these to the environment file that will be loaded by systemd
-%{ if gpu_enabled }
-echo "GPU_FLAG='--gpus=all'" >> /etc/open-webui.d/openwebui.env
-%{ endif }
+[Service]
+TimeoutStartSec=0
+Type=simple
+Restart=always
+ExecStartPre=-/usr/bin/docker stop %n
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStart=/usr/bin/docker run -p 80:8080 -e RAG_EMBEDDING_MODEL_AUTO_UPDATE=true -v /etc/open-webui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name %n ghcr.io/open-webui/open-webui:ollama
 
-# start the openwebui service
+[Install]
+WantedBy=multi-user.target
+EOF
+
+## Reload systemd and enable the service
+systemctl daemon-reload
 systemctl enable openwebui.service
+
 systemctl start openwebui.service

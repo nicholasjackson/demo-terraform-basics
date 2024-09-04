@@ -1,64 +1,55 @@
-variable "project" {
-  description = "Name of the Azure resource group"
-  default     = "terraform-basics-test"
+variable "open_webui_user" {
+  description = "Username to access the web UI"
+  default     = "admin@demo.gs"
 }
 
-variable "region" {
-  description = "Region to deploy the resources"
-  default     = "West Europe"
+variable "openai_base" {
+  description = "Optional base URL to use OpenAI API with Open Web UI" 
+  default     = "https://api.openai.com/v1"
 }
 
-variable "gpu_enabled" {
-  description = "Is the VM GPU enabled"
-  default     = true
+variable "openai_key" {
+  description = "Optional API key to use OpenAI API with Open Web UI"
+  default     = ""
 }
 
 variable "machine" {
   description = "The machine type and image to use for the VM"
   # GPU instance with 24GB of memory and 4 vCPUs with 16GB of system RAM
   default = {
-    "gpu" : { "type" : "g3s.xlarge", "version" : "debian-11-amd64-20240717-1811" }
-    "cpu" : { "type" : "t2.large", "version" : "debian-11-amd64-20240717-1811" }
+    "gpu" : { "type" : "Standard_NC4as_T4_v3" },
+    "cpu" : { "type" : "Standard_A2_v2" },
   }
 }
 
-variable "openai_key" {
-  description = "Optional API key to use OpenAI API with open_web_ui UI"
-  default     = ""
-}
-
-variable "open_web_ui_user" {
-  description = "Username to access the web UI"
-  default     = "admin@demo.gs"
-}
-
-variable "ssh_pub_key" {
-  description = "Public SSH key to be added to the VM"
-  default     = ""
+variable "gpu_enabled" {
+  description = "Is the VM GPU enabled"
+  default     = false
 }
 
 terraform {
   required_providers {
     azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "3.112.0"
+      source = "hashicorp/azurerm"
+      version = "3.116.0"
     }
     cloudinit = {
-      source  = "hashicorp/cloudinit"
-      version = "2.3.4"
+      source = "hashicorp/cloudinit"
+      version = "2.2.0"
     }
-    terracurl = {
-      source  = "devops-rob/terracurl"
+     terracurl = {
+      source = "devops-rob/terracurl"
       version = "1.2.1"
+    }
+    random = {
+      source = "hashicorp/random"
+      version = "3.6.2"
     }
   }
 }
 
 provider "azurerm" {
-  features {}
-}
-
-resource "azurerm_resource_group" "vm" {
-  name     = var.project
-  location = var.region
+  features {
+    
+  }
 }
