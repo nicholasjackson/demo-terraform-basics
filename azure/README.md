@@ -41,10 +41,15 @@ A full walkthrough explaining this example can be found at the following link.
 ## Resources Created
 
 * 1x Resource Group
-
-* 1x Virtual Machine (t3.micro or g4dn.xlarge)
+* 1x Virtual Machine (Standard_NC4as_T4_v3 or Standard_A2_v2)
 * 1x Random Password
 * 1x Terracurl Request
+* 1x Cloudinit Config
+* 1x Virtual Network
+* 1x Subnet
+* 1x Public IP
+* 1x Network Interface
+
 
 ## Variables
 
@@ -52,8 +57,6 @@ The following variables are used in this example:
 
 | Name        | Default               | Description                               |
 |-------------|-----------------------|-------------------------------------------|
-| **project** | terraform-basics-test | The name of the project                   |
-| **region**  | eu-west-1             | The AWS region to deploy the resources in |
 | **gpu_enabled** | false | When set to true Terraform will deploy a GPU based Virtual Machine based on a g4dn.xlarge, when false a t3.micro is used |
 | **machine** | t3.micro, g4dn.xlarge | The type of Virtual Machine to deploy, selected dependent on gpu_enabled variable |
 | **open_webui_user** | admin@demo.gs | The username to use with Open Web UI |
@@ -67,13 +70,13 @@ The following variables are used in this example:
 ### Azure ARM Credentials
 
 To run this example you will need an Azure account and valid credentials that 
-can be used to deploy resources. An AWS Free Tier account can be used to create the CPU example shown in this
-demo. You can sign up for an AWS account at the following link.
+can be used to deploy resources. An Azure Free Trial account can be used to create the CPU example shown in this
+demo. You can sign up for an Azure account at the following link.
 
-[https://aws.amazon.com/free](https://aws.amazon.com/free)
+[https://azure.microsoft.com/en-gb/pricing/offers/ms-azr-0044p](https://azure.microsoft.com/en-gb/pricing/offers/ms-azr-0044p)
 
-Once you have created an account you need to create an IAM user that Terraform
-can use to create resources. The process for creating an IAM user is detailed in
+Once you have created an account you need to create ARM credentials that Terraform
+can use to create resources. The process for creating the credentials is detailed in
 the walk through video:
 
 [https://youtu.be/6oJzsBl_-so?si=4rDgoVTjGxc-MU4L&t=276](https://youtu.be/6oJzsBl_-so?si=4rDgoVTjGxc-MU4L&t=276)
@@ -84,10 +87,11 @@ the configuration you need to set them in your environment. An example of how to
 set the environment variables is shown below. You would need to replace the `xxxx`
 values with your own credentials, and the region with the region you want to deploy.
 
-```shell, 
-export AWS_ACCESS_KEY_ID="xxxx-xxxx-xxxx-xxxx"
-export AWS_SECRET_ACCESS_KEY="xxxx-xxxx-xxxx-xxxx"
-export AWS_REGION="eu-west-1"
+```shell
+export ARM_CLIENT_ID="xxxx-xxxx-xxxx-xxxx-xxxx"
+export ARM_SUBSCRIPTION_ID="xxxx-xxxx-xxxx-xxxx-xxxx"
+export ARM_TENANT_ID="xxxx-xxxx-xxxx-xxxx-xxxx"
+export ARM_CLIENT_SECRET="xxxx-xxxx-xxxx-xxxx-xxxx"
 ```
 
 An alternative approach is to use 1Password, you can use the 1Password CLI to populate
@@ -104,11 +108,12 @@ if ! [ -x "$(command -v op)" ]; then
 	command="op.exe"
 fi
 
-# set the AWS environment variables, this loads the values from 1Password item "Terraform Basics"
+# set the Azure environment variables, this loads the values from 1Password item "Terraform Basics"
 # selecting the item with a field the same as the environment variable name
-export AWS_ACCESS_KEY_ID="$(${command} item get "Terraform Basics" --fields "AWS_ACCESS_KEY_ID")"
-export AWS_SECRET_ACCESS_KEY="$(${command} item get "Terraform Basics" --fields "AWS_SECRET_ACCESS_KEY")"
-export AWS_REGION="$(${command} item get "Terraform Basics" --fields "AWS_REGION")"
+export ARM_CLIENT_ID="$(${command} item get "Terraform Basics" --fields "ARM_CLIENT_ID")"
+export ARM_SUBSCRIPTION_ID="$(${command} item get "Terraform Basics" --fields "ARM_SUBSCRIPTION_ID")"
+export ARM_TENANT_ID="$(${command} item get "Terraform Basics" --fields "ARM_TENANT_ID")"
+export ARM_CLIENT_SECRET="$(${command} item get "Terraform Basics" --fields "ARM_CLIENT_SECRET")"
 
 # prefixing the TF_VAR_ environment variables allows Terraform to use them as variables
 export TF_VAR_openai_key="$(${command} item get "Terraform Basics" --fields "Open Ai API Key")"
