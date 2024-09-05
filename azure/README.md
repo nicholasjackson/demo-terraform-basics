@@ -1,4 +1,4 @@
-# Terraform example to create a Virtual Machine on AWS and provision Open Web UI
+# Basic Terraform example to create a Virtual Machine in Azure
 
 The purpose of this example is to show some of the more basic features of Terraform:
 * Providers
@@ -8,7 +8,7 @@ The purpose of this example is to show some of the more basic features of Terraf
 * Outputs
 * Functions and Interpolation
 
-This example creates a Virtual Machine in AWS and provisions the Open Web UI
+This example creates a Virtual Machine in Azure and provisions the Open Web UI
 using a cloud-init script.
 
 [https://github.com/open-webui/open-webui](https://github.com/open-webui/open-webui)
@@ -20,30 +20,28 @@ It is acknowledged that the provision of the Open Web UI application using Cloud
 Init is not the most optimal way to provision an application with Terraform.
 This approach has been taken for simplicity, a more production-ready approach would
 be to use Packer to bake a VM with the software installed and then use Terraform to
-deploy it. An example for Packer can be found in this repository.
+deploy it. An example for Packer can be found in with the AWS example in this repository.
 
 A full walkthrough explaining this example can be found at the following link.
 
-[https://www.youtube.com/watch?v=rsct-JvJmKs](https://www.youtube.com/watch?v=rsct-JvJmKs)
+[https://www.youtube.com/watch?v=6oJzsBl_-so](https://www.youtube.com/watch?v=6oJzsBl_-so)
 
 ## Requirements
 
-* An AWS account and IAM Credentials that can be used to deploy resources.
+* An Azure account and Credentials that can be used to deploy resources.
 * Optional - The ability to deploy GPU based Virtual Machines
 * Optional - Open AI API Key to use with Open Web UI
 
 ## Providers Used
-* [AWS 5.59.0](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+* [Azure 3.112.0](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
 * [Terracurl 1.2.1](https://registry.terraform.io/providers/devops-rob/terracurl/latest/docs)
 * [Random 3.6.2](https://registry.terraform.io/providers/hashicorp/random/latest/docs)
+* [Cloudinit 2.3.4](https://registry.terraform.io/providers/hashicorp/cloudinit/latest/docs)
 
 ## Resources Created
 
-* 1x VPC
-* 1x Subnet
-* 1x Internet Gateway
-* 1x Routing Table
-* 2x Security Groups (ssh, http)
+* 1x Resource Group
+
 * 1x Virtual Machine (t3.micro or g4dn.xlarge)
 * 1x Random Password
 * 1x Terracurl Request
@@ -54,10 +52,10 @@ The following variables are used in this example:
 
 | Name        | Default               | Description                               |
 |-------------|-----------------------|-------------------------------------------|
+| **project** | terraform-basics-test | The name of the project                   |
+| **region**  | eu-west-1             | The AWS region to deploy the resources in |
 | **gpu_enabled** | false | When set to true Terraform will deploy a GPU based Virtual Machine based on a g4dn.xlarge, when false a t3.micro is used |
 | **machine** | t3.micro, g4dn.xlarge | The type of Virtual Machine to deploy, selected dependent on gpu_enabled variable |
-| **ami_name** | debian-11-amd64-* | The name of the AMI to use for the Virtual Machine | 
-| **ami_owner** | 136693071363 | The owner of the AMI to use for the Virtual Machine, default: debian | 
 | **open_webui_user** | admin@demo.gs | The username to use with Open Web UI |
 | **openai_base** | https://api.openai.com/v1 | The base URL for the Open AI API
 | **openai_key** | "" | The Open AI API Key to use with Open Web UI |
@@ -66,10 +64,10 @@ The following variables are used in this example:
 
 ## Authentication
 
-### AWS IAM
+### Azure ARM Credentials
 
-To run this example you will need an AWS Account and a valid AWS access key and 
-secret. An AWS Free Tier account can be used to create the CPU example shown in this
+To run this example you will need an Azure account and valid credentials that 
+can be used to deploy resources. An AWS Free Tier account can be used to create the CPU example shown in this
 demo. You can sign up for an AWS account at the following link.
 
 [https://aws.amazon.com/free](https://aws.amazon.com/free)
@@ -78,7 +76,7 @@ Once you have created an account you need to create an IAM user that Terraform
 can use to create resources. The process for creating an IAM user is detailed in
 the walk through video:
 
-[https://youtu.be/rsct-JvJmKs?si=N8VN28bcvok29YIt&t=239](https://youtu.be/rsct-JvJmKs?si=N8VN28bcvok29YIt&t=239)
+[https://youtu.be/6oJzsBl_-so?si=4rDgoVTjGxc-MU4L&t=276](https://youtu.be/6oJzsBl_-so?si=4rDgoVTjGxc-MU4L&t=276)
 
 It is incredibly important to ensure that your credentials stay secret. Terraform
 can read credentials from environment variables, so rather than hardcoding them in
@@ -207,7 +205,6 @@ the Open Web UI application.
 
 ```shell
 admin@ip-10-1-0-50:~$ sudo docker ps
-CONTAINER ID   IMAGE                                       COMMAND           CREATED         STATUS                   PORTS                                   NAMES
 CONTAINER ID   IMAGE                                       COMMAND           CREATED         STATUS                   PORTS                                   NAMES
 f7d07f08d101   ghcr.io/open-webui/open-webui:open_web_ui   "bash start.sh"   8 minutes ago   Up 8 minutes (healthy)   0.0.0.0:80->8080/tcp, :::80->8080/tcp   open_web_ui.service
 ```
