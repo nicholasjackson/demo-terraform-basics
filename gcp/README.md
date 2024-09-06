@@ -8,7 +8,7 @@ The purpose of this example is to show some of the more basic features of Terraf
 * Outputs
 * Functions and Interpolation
 
-This example creates a Virtual Machine in Azure and provisions the Open Web UI
+This example creates a Virtual Machine in Google Cloud and provisions the Open Web UI
 using a cloud-init script.
 
 [https://github.com/open-webui/open-webui](https://github.com/open-webui/open-webui)
@@ -24,19 +24,19 @@ deploy it. An example for Packer can be found in with the AWS example in this re
 
 A full walkthrough explaining this example can be found at the following link.
 
-[https://www.youtube.com/watch?v=6oJzsBl_-so](https://www.youtube.com/watch?v=6oJzsBl_-so)
+[https://www.youtube.com/watch?v=Xni8GUcWQ_s](https://www.youtube.com/watch?v=Xni8GUcWQ_s)
 
 ## Requirements
 
-* An Azure account and Credentials that can be used to deploy resources.
+* A Google Cloud account and credentials that can be used to deploy resources.
 * Optional - The ability to deploy GPU based Virtual Machines
 * Optional - Open AI API Key to use with Open Web UI
 
 ## Providers Used
-* [Azure 3.112.0](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
+
+* [Google Cloud 5.35.0](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
 * [Terracurl 1.2.1](https://registry.terraform.io/providers/devops-rob/terracurl/latest/docs)
 * [Random 3.6.2](https://registry.terraform.io/providers/hashicorp/random/latest/docs)
-* [Cloudinit 2.3.4](https://registry.terraform.io/providers/hashicorp/cloudinit/latest/docs)
 
 ## Resources Created
 
@@ -57,8 +57,9 @@ The following variables are used in this example:
 
 | Name        | Default               | Description                               |
 |-------------|-----------------------|-------------------------------------------|
+| **region** | europe-west1-b | The region to deploy the Virtual Machine in | 
 | **gpu_enabled** | false | When set to true Terraform will deploy a GPU based Virtual Machine based on a g4dn.xlarge, when false a t3.micro is used |
-| **machine** | t3.micro, g4dn.xlarge | The type of Virtual Machine to deploy, selected dependent on gpu_enabled variable |
+| **machine** | g2-standard-4, n1-standard-4 | The type of Virtual Machine to deploy, selected dependent on gpu_enabled variable |
 | **open_webui_user** | admin@demo.gs | The username to use with Open Web UI |
 | **openai_base** | https://api.openai.com/v1 | The base URL for the Open AI API
 | **openai_key** | "" | The Open AI API Key to use with Open Web UI |
@@ -67,19 +68,19 @@ The following variables are used in this example:
 
 ## Authentication
 
-### Azure ARM Credentials
+### Google Cloud Credentials
 
-To run this example you will need an Azure account and valid credentials that 
-can be used to deploy resources. An Azure Free Trial account can be used to create the CPU example shown in this
-demo. You can sign up for an Azure account at the following link.
+To run this example you will need a GCP account and valid credentials that 
+can be used to deploy resources. A GCP Free Trial account can be used to create the CPU example shown in this
+demo. You can sign up for a GCP account at the following link.
 
-[https://azure.microsoft.com/en-gb/pricing/offers/ms-azr-0044p](https://azure.microsoft.com/en-gb/pricing/offers/ms-azr-0044p)
+[https://cloud.google.com/free?hl=en](https://cloud.google.com/free?hl=en)
 
 Once you have created an account you need to create ARM credentials that Terraform
 can use to create resources. The process for creating the credentials is detailed in
 the walk through video:
 
-[https://youtu.be/6oJzsBl_-so?si=4rDgoVTjGxc-MU4L&t=276](https://youtu.be/6oJzsBl_-so?si=4rDgoVTjGxc-MU4L&t=276)
+[https://youtu.be/Xni8GUcWQ_s?si=4b6Ht_uaqWJ6vhZ6&t=230](https://youtu.be/Xni8GUcWQ_s?si=4b6Ht_uaqWJ6vhZ6&t=230)
 
 It is incredibly important to ensure that your credentials stay secret. Terraform
 can read credentials from environment variables, so rather than hardcoding them in
@@ -116,6 +117,7 @@ export ARM_TENANT_ID="$(${command} item get "Terraform Basics" --fields "ARM_TEN
 export ARM_CLIENT_SECRET="$(${command} item get "Terraform Basics" --fields "ARM_CLIENT_SECRET")"
 
 # prefixing the TF_VAR_ environment variables allows Terraform to use them as variables
+export TF_VAR_openai_base="https://api.openai.com/v1"
 export TF_VAR_openai_key="$(${command} item get "Terraform Basics" --fields "Open Ai API Key")"
 ```
 

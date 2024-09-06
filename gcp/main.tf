@@ -43,6 +43,11 @@ terraform {
       source  = "hashicorp/google"
       version = "5.35.0"
     }
+    
+    random = {
+      source = "hashicorp/random"
+      version = "3.6.2"
+    }
 
     terracurl = {
       source  = "devops-rob/terracurl"
