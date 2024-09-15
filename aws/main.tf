@@ -1,3 +1,8 @@
+variable "region" {
+  description = "The AWS region to deploy the VM"
+  default     = "eu-central-1"
+}
+
 variable "gpu_enabled" {
   description = "Is the VM GPU enabled"
   default     = false
@@ -10,6 +15,11 @@ variable "machine" {
     "gpu" : { "type" : "g4dn.xlarge" },
     "cpu" : { "type" : "t3.micro" },
   }
+}
+
+variable "custom_ami" {
+  description = "The custom AMI to use for the VM, if not provided the latest Debian 11 AMI will be used"
+  default     = ""
 }
 
 variable "provision_script" {
