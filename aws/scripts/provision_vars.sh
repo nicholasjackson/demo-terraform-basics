@@ -41,7 +41,7 @@ USER=${open_webui_user}
 
 # Start Open Web UI for the first time so that it creates the database
 /usr/bin/docker pull ghcr.io/open-webui/open-webui:ollama
-/usr/bin/docker run -d -v /etc/open_web_ui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name openwebui ghcr.io/open-webui/open-webui:ollama
+/usr/bin/docker run -d -v /etc/open_webui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name openwebui ghcr.io/open-webui/open-webui:ollama
 sleep 10 # Wait 10s for the server to start and the database to be created
 /usr/bin/docker stop openwebui
 /usr/bin/docker rm openwebui
@@ -59,6 +59,9 @@ sqlite3 /etc/open-webui.d/webui.db < /etc/open-webui.d/webui.sql
 
 # Cleanup
 rm -f /etc/open-webui.d/webui.sql
+
+# Create the environment file that will be loaded by systemd
+echo "#Environment" > /etc/open-webui.d/openwebui.env
 
 # if the openai_key is set, then we need to pass it to the container
 # write these to the environment file that will be loaded by systemd
@@ -107,7 +110,7 @@ Restart=always
 EnvironmentFile=/etc/open-webui.d/openwebui.env
 ExecStartPre=-/usr/bin/docker stop %n
 ExecStartPre=-/usr/bin/docker rm %n
-ExecStart=/usr/bin/docker run -p 80:8080 $OPENAI_KEY $OPENAI_BASE $GPU_FLAG -e RAG_EMBEDDING_MODEL_AUTO_UPDATE=true -v /etc/open_web_ui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name %n ghcr.io/open-webui/open-webui:ollama
+ExecStart=/usr/bin/docker run -p 80:8080 $OPENAI_KEY $OPENAI_BASE $GPU_FLAG -e RAG_EMBEDDING_MODEL_AUTO_UPDATE=true -v /etc/open_webui.d:/root/.open_web_ui -v /etc/open-webui.d:/app/backend/data --name %n ghcr.io/open-webui/open-webui:ollama
 
 [Install]
 WantedBy=multi-user.target
@@ -116,6 +119,7 @@ EOF
 ## Reload systemd and enable the service
 systemctl daemon-reload
 systemctl enable openwebui.service
+systemctl start openwebui.service
 
 # Reboot the system to start the Open Web UI server
 # and to load the Nvidia drivers if the GPU is enabled

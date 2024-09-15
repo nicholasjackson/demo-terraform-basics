@@ -58,6 +58,9 @@ EOF
 
 sqlite3 /etc/open-webui.d/webui.db < /etc/open-webui.d/webui.sql
 
+# Create the environment file that will be loaded by systemd
+echo "#Environment" > /etc/open-webui.d/openwebui.env
+
 %{ if openai_key != "" }
 echo "OPENAI_KEY='-e OPENAI_API_KEY=${openai_key}'" >> /etc/open-webui.d/openwebui.env
 echo "OPENAI_BASE='-e OPENAI_API_BASE_URLS=${openai_base}'" >> /etc/open-webui.d/openwebui.env
